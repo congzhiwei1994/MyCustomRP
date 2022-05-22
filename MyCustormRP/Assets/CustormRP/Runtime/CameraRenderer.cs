@@ -14,10 +14,16 @@ public class CameraRenderer
     CullingResults cullingResults;
 
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
+
+    // SRP不支持的Shader LightMode 标签类型
     static ShaderTagId[] legacyShaderTagIds =
     {
         new ShaderTagId("Always"),
         new ShaderTagId("ForWardBase"),
+        new ShaderTagId("PrepassBase"),
+        new ShaderTagId("Vertex"),
+        new ShaderTagId("VertexLMRGBM"),
+        new ShaderTagId("VertexLM"),
     };
 
     const string bufferName = "Render Camera";
@@ -42,6 +48,7 @@ public class CameraRenderer
 
         Step();
         DrawVisibleGeometry();
+        DrawUnsupportedShaders();
         Submit();
     }
 
@@ -78,7 +85,6 @@ public class CameraRenderer
         // 绘制天空盒
         context.DrawSkybox(camera);
 
-
         sortingSettings.criteria = SortingCriteria.CommonTransparent;
         drawingSettings.sortingSettings = sortingSettings;
 
@@ -110,8 +116,6 @@ public class CameraRenderer
         buffer.Clear();
     }
 
-
-
     /// <summary>
     /// 剔除, 相机渲染Render()的最开始调用剔除操作。
     /// </summary>
@@ -126,5 +130,22 @@ public class CameraRenderer
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// 绘制SRP不支持的Shader类型
+    /// </summary>
+    void DrawUnsupportedShaders()
+    {
+        var drawingSettings = new DrawingSettings(legacyShaderTagIds[0], new SortingSettings(camera));
+        for (var i = 0; i < legacyShaderTagIds.Length; i++)
+        {
+            // 遍历数组逐个设置Shader的PassName
+            drawingSettings.SetShaderPassName(i, legacyShaderTagIds[i]);
+        }
+        // 使用默认的设置即可，反正画出来的都是不支持的
+        var filteringSettings = FilteringSettings.defaultValue;
+        // 绘制不支持的ShaderTag类型的物体
+        context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
     }
 }
