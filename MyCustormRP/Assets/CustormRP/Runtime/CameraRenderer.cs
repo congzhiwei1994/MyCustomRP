@@ -5,7 +5,7 @@ using UnityEngine.Rendering;
 /// <summary>
 /// 处理单个相机的单个渲染
 /// </summary>
-public class CameraRenderer
+public partial class CameraRenderer
 {
     ScriptableRenderContext context;
     Camera camera;
@@ -14,17 +14,6 @@ public class CameraRenderer
     CullingResults cullingResults;
 
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
-
-    // SRP不支持的Shader LightMode 标签类型
-    static ShaderTagId[] legacyShaderTagIds =
-    {
-        new ShaderTagId("Always"),
-        new ShaderTagId("ForWardBase"),
-        new ShaderTagId("PrepassBase"),
-        new ShaderTagId("Vertex"),
-        new ShaderTagId("VertexLMRGBM"),
-        new ShaderTagId("VertexLM"),
-    };
 
     const string bufferName = "Render Camera";
 
@@ -41,14 +30,20 @@ public class CameraRenderer
     {
         this.context = context;
         this.camera = camera;
+
+        // 在Game视图绘制的几何体也会绘制到Scene视图中
+        PrepareForWindow();
+
         if (!Cull())
         {
             return;
         }
-
+        // 设置缓冲区的名字
+        PrepareBuffer();
         Step();
         DrawVisibleGeometry();
         DrawUnsupportedShaders();
+        DrawGizmos();
         Submit();
     }
 
@@ -58,10 +53,12 @@ public class CameraRenderer
     void Step()
     {
         context.SetupCameraProperties(camera);
+        // 获得当前相机的clearFlags
+        var clearFlags = camera.clearFlags;
         // 为了保证下一帧绘制的图像正确，通常需要清除渲染目标，清除旧的数据
-        buffer.ClearRenderTarget(true, true, Color.clear);
+        buffer.ClearRenderTarget(clearFlags <= CameraClearFlags.Depth, clearFlags == CameraClearFlags.Color, clearFlags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.clear);
         // 开启采样
-        buffer.BeginSample(bufferName);
+        buffer.BeginSample(SampleName);
         ExecuteBuffer();
     }
 
@@ -100,7 +97,7 @@ public class CameraRenderer
     void Submit()
     {
         // 结束采样
-        buffer.EndSample(bufferName);
+        buffer.EndSample(SampleName);
         ExecuteBuffer();
         // 当执行  context.Submit() 提交缓冲区渲染明然命令才进行这一帧的渲染
         context.Submit();
@@ -132,20 +129,4 @@ public class CameraRenderer
         return false;
     }
 
-    /// <summary>
-    /// 绘制SRP不支持的Shader类型
-    /// </summary>
-    void DrawUnsupportedShaders()
-    {
-        var drawingSettings = new DrawingSettings(legacyShaderTagIds[0], new SortingSettings(camera));
-        for (var i = 0; i < legacyShaderTagIds.Length; i++)
-        {
-            // 遍历数组逐个设置Shader的PassName
-            drawingSettings.SetShaderPassName(i, legacyShaderTagIds[i]);
-        }
-        // 使用默认的设置即可，反正画出来的都是不支持的
-        var filteringSettings = FilteringSettings.defaultValue;
-        // 绘制不支持的ShaderTag类型的物体
-        context.DrawRenderers(cullingResults, ref drawingSettings, ref filteringSettings);
-    }
 }
