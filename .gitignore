@@ -20,3 +20,6 @@
 /MyCustormRP/UnityEngine.UI.csproj
 /MyCustormRP/MyCustormRP.sln
 MyCustormRP/UserSettings/EditorUserSettings.asset
+MyCustormRP/Unity.RenderPipelines.Core.Editor.csproj
+MyCustormRP/Unity.RenderPipelines.Core.Runtime.csproj
+MyCustormRP/Unity.RenderPipelines.Core.ShaderLibrary.csproj

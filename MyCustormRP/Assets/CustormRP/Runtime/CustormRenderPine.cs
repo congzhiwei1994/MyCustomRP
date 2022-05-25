@@ -6,6 +6,11 @@ public class CustormRenderPine : RenderPipeline
 {
     CameraRenderer renderer = new CameraRenderer();
 
+    public CustormRenderPine()
+    {
+        GraphicsSettings.useScriptableRenderPipelineBatching = true;
+    }
+
     /// <summary>
     /// SPR入口，每一帧都会调用此方法进行渲染
     /// </summary>
