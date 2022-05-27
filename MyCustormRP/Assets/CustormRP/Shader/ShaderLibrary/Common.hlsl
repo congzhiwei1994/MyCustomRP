@@ -5,6 +5,7 @@
     
     #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
     #include "UnityInput.hlsl"
+    #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/UnityInstancing.hlsl"
     
     #define UNITY_MATRIX_M unity_ObjectToWorld 
     #define UNITY_MATRIX_I_M unity_WorldToObject
