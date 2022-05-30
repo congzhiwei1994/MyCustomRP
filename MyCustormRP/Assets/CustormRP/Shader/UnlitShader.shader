@@ -16,9 +16,12 @@ Shader "CustormRP/Unlit Shader"
         {
             Blend[_SrcBlend][_DstBlend]
             CGPROGRAM
+            #pragma multi_compile_instancing
+
+            
             #pragma vertex UnlitPassVertex 
             #pragma fragment UnlitPassFragment 
-
+            
             #include "UnlitPass.hlsl"
 
             
