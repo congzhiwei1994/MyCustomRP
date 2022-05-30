@@ -12,3 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6abd178b886e36243ab1c58f28e488c8, type: 3}
   m_Name: CustormRP
   m_EditorClassIdentifier: 
+  useDynamicBatching: 0
+  useGPUInstancing: 0
+  useSRPBatcher: 0

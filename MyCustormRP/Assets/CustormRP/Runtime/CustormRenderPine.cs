@@ -6,9 +6,14 @@ public class CustormRenderPine : RenderPipeline
 {
     CameraRenderer renderer = new CameraRenderer();
 
-    public CustormRenderPine()
+    private bool useDynamicBatching;
+    private bool useGPUInstancing;
+
+    public CustormRenderPine(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher)
     {
-        GraphicsSettings.useScriptableRenderPipelineBatching = true;
+        this.useDynamicBatching = useDynamicBatching;
+        this.useGPUInstancing = useGPUInstancing;
+        GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
     }
 
     /// <summary>
@@ -18,10 +23,12 @@ public class CustormRenderPine : RenderPipeline
     /// Camera[]： 相机数组，存储了参与这一帧渲染的所有相机对象
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
+
+
         // 遍历所有相机进行渲染
         foreach (var camera in cameras)
         {
-            renderer.Render(context, camera);
+            renderer.Render(context, camera, useDynamicBatching, useGPUInstancing);
         }
     }
 }

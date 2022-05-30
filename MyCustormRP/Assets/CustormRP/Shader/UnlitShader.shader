@@ -3,6 +3,8 @@ Shader "CustormRP/Unlit Shader"
     Properties
     {
         // _MainTex ("Texture", 2D) = "white" {}
+        [Enum(UnityEngine.Rendering.BlendMode)] _SrcBlend("SrcBlend",float) = 1
+        [Enum(UnityEngine.Rendering.BlendMode)] _DstBlend("DstBlend",float) = 1
         _BaseColor("Base Color",color) = (1,1,1,1)
     }
     SubShader
@@ -12,6 +14,7 @@ Shader "CustormRP/Unlit Shader"
 
         Pass
         {
+            Blend[_SrcBlend][_DstBlend]
             CGPROGRAM
             #pragma vertex UnlitPassVertex 
             #pragma fragment UnlitPassFragment 

@@ -8,6 +8,7 @@ using UnityEngine.Rendering;
 public partial class CameraRenderer
 {
     ScriptableRenderContext context;
+    Lighting light = new Lighting();
     Camera camera;
 
     // 储存相机剔除后的所有视野内可见物体的数据信息
@@ -26,7 +27,7 @@ public partial class CameraRenderer
     /// <summary>
     /// 绘制在相机视野内的所有物体
     /// </summary>
-    public void Render(ScriptableRenderContext context, Camera camera)
+    public void Render(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing)
     {
         this.context = context;
         this.camera = camera;
@@ -41,7 +42,9 @@ public partial class CameraRenderer
         // 设置缓冲区的名字
         PrepareBuffer();
         Step();
-        DrawVisibleGeometry();
+        // 绘制几何体之前设置灯光
+        light.Setup(context);
+        DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
         DrawUnsupportedShaders();
         DrawGizmos();
         Submit();
@@ -65,7 +68,7 @@ public partial class CameraRenderer
     /// <summary>
     /// 绘制可见物体
     /// </summary>
-    void DrawVisibleGeometry()
+    void DrawVisibleGeometry(bool useDynamicBatching, bool useGPUInstancing)
     {
         // 设置绘制顺序和指定渲染相机
         var sortingSettings = new SortingSettings(camera)
@@ -74,7 +77,13 @@ public partial class CameraRenderer
         };
 
         // 设置渲染的shader以及排序模式
-        DrawingSettings drawingSettings = new DrawingSettings(unlitShaderTagId, sortingSettings);
+        DrawingSettings drawingSettings = new DrawingSettings(unlitShaderTagId, sortingSettings)
+        {
+            // 设置渲染时批处理的使用状态
+            enableDynamicBatching = useDynamicBatching,
+            enableInstancing = useGPUInstancing
+        };
+
         // 只绘制RenderQueue为Opaque的不透明物体
         FilteringSettings filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
         // 图像绘制， 绘制不透明物体
