@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -15,6 +14,7 @@ public partial class CameraRenderer
     CullingResults cullingResults;
 
     static ShaderTagId unlitShaderTagId = new ShaderTagId("SRPDefaultUnlit");
+    private static ShaderTagId litShaderTagId = new ShaderTagId("CustomLit");
 
     const string bufferName = "Render Camera";
 
@@ -39,11 +39,12 @@ public partial class CameraRenderer
         {
             return;
         }
+
         // 设置缓冲区的名字
         PrepareBuffer();
         Step();
         // 绘制几何体之前设置灯光
-        light.Setup(context);
+        light.Setup(context, cullingResults);
         DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
         DrawUnsupportedShaders();
         DrawGizmos();
@@ -59,7 +60,8 @@ public partial class CameraRenderer
         // 获得当前相机的clearFlags
         var clearFlags = camera.clearFlags;
         // 为了保证下一帧绘制的图像正确，通常需要清除渲染目标，清除旧的数据
-        buffer.ClearRenderTarget(clearFlags <= CameraClearFlags.Depth, clearFlags == CameraClearFlags.Color, clearFlags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.clear);
+        buffer.ClearRenderTarget(clearFlags <= CameraClearFlags.Depth, clearFlags == CameraClearFlags.Color,
+            clearFlags == CameraClearFlags.Color ? camera.backgroundColor.linear : Color.clear);
         // 开启采样
         buffer.BeginSample(SampleName);
         ExecuteBuffer();
@@ -83,6 +85,9 @@ public partial class CameraRenderer
             enableDynamicBatching = useDynamicBatching,
             enableInstancing = useGPUInstancing
         };
+
+        // 渲染CustomLit Pass
+        drawingSettings.SetShaderPassName(1, litShaderTagId);
 
         // 只绘制RenderQueue为Opaque的不透明物体
         FilteringSettings filteringSettings = new FilteringSettings(RenderQueueRange.opaque);
@@ -135,7 +140,7 @@ public partial class CameraRenderer
             cullingResults = context.Cull(ref p);
             return true;
         }
+
         return false;
     }
-
 }

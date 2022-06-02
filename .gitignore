@@ -23,3 +23,5 @@ MyCustormRP/UserSettings/EditorUserSettings.asset
 MyCustormRP/Unity.RenderPipelines.Core.Editor.csproj
 MyCustormRP/Unity.RenderPipelines.Core.Runtime.csproj
 MyCustormRP/Unity.RenderPipelines.Core.ShaderLibrary.csproj
+/MyCustormRP/.idea
+/MyCustormRP/*.csproj
