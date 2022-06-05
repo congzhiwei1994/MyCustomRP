@@ -1,4 +1,3 @@
-
 using UnityEngine;
 using UnityEngine.Rendering;
 
@@ -8,12 +7,18 @@ public class CustormRenderPine : RenderPipeline
 
     private bool useDynamicBatching;
     private bool useGPUInstancing;
+    private CustormShadowSettings shadowSettings;
 
-    public CustormRenderPine(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher)
+    public CustormRenderPine(bool useDynamicBatching, bool useGPUInstancing, bool useSRPBatcher,
+        CustormShadowSettings shadowSettings)
     {
         this.useDynamicBatching = useDynamicBatching;
         this.useGPUInstancing = useGPUInstancing;
+        //启用SRP
         GraphicsSettings.useScriptableRenderPipelineBatching = useSRPBatcher;
+        //光强转换到线性空间 
+        GraphicsSettings.lightsUseLinearIntensity = true;
+        this.shadowSettings = shadowSettings;
     }
 
     /// <summary>
@@ -23,12 +28,10 @@ public class CustormRenderPine : RenderPipeline
     /// Camera[]： 相机数组，存储了参与这一帧渲染的所有相机对象
     protected override void Render(ScriptableRenderContext context, Camera[] cameras)
     {
-
-
         // 遍历所有相机进行渲染
         foreach (var camera in cameras)
         {
-            renderer.Render(context, camera, useDynamicBatching, useGPUInstancing);
+            renderer.Render(context, camera, useDynamicBatching, useGPUInstancing, shadowSettings);
         }
     }
 }

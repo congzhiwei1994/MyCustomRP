@@ -25,9 +25,15 @@ public partial class CameraRenderer
 
 
     /// <summary>
-    /// 绘制在相机视野内的所有物体
+    /// 单相机绘制入口,绘制在相机视野内的所有物体
     /// </summary>
-    public void Render(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing)
+    /// <param name="context">上下文菜单</param>
+    /// <param name="camera">场景中激活的相机</param>
+    /// <param name="useDynamicBatching">动态合批</param>
+    /// <param name="useGPUInstancing">GPU合批</param>
+    /// <param name="shadowSettings">阴影设置</param>
+    public void Render(ScriptableRenderContext context, Camera camera, bool useDynamicBatching, bool useGPUInstancing,
+        CustormShadowSettings shadowSettings)
     {
         this.context = context;
         this.camera = camera;
@@ -35,7 +41,7 @@ public partial class CameraRenderer
         // 在Game视图绘制的几何体也会绘制到Scene视图中
         PrepareForWindow();
 
-        if (!Cull())
+        if (!Cull(shadowSettings.maxDistance))
         {
             return;
         }
@@ -44,7 +50,7 @@ public partial class CameraRenderer
         PrepareBuffer();
         Step();
         // 绘制几何体之前设置灯光
-        light.Setup(context, cullingResults);
+        light.Setup(context, cullingResults, shadowSettings);
         DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
         DrawUnsupportedShaders();
         DrawGizmos();
@@ -130,12 +136,14 @@ public partial class CameraRenderer
     /// <summary>
     /// 剔除, 相机渲染Render()的最开始调用剔除操作。
     /// </summary>
-    bool Cull()
+    bool Cull(float maxshadowSettings)
     {
         ScriptableCullingParameters p;
         // 得到需要进行剔除检查的所有物体
         if (camera.TryGetCullingParameters(out p))
         {
+            // 得到最大的阴影距离，和相机的远裁剪面作比较，取最小的那个作为阴影的最大距离
+            p.shadowDistance = Mathf.Min(maxshadowSettings, camera.farClipPlane);
             // 正式剔除
             cullingResults = context.Cull(ref p);
             return true;

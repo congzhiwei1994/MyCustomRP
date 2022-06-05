@@ -30,39 +30,67 @@ public class Lighting
 
     // 储存相机剔除后的结果
     CullingResults cullingResults;
+    private Shadow shadow = new Shadow();
 
     /// <summary>
     /// 用来设置灯光
     /// </summary>
     /// <param name="context">上下文</param>
     /// <param name="cullingResults">相机剔除后的数据</param>
-    public void Setup(ScriptableRenderContext context, CullingResults cullingResults)
+    public void Setup(ScriptableRenderContext context, CullingResults cullingResults,
+        CustormShadowSettings shadowSettings)
     {
         this.cullingResults = cullingResults;
         buffer.BeginSample(bufferName);
         SetupLights();
+        // 传递阴影数据
+        shadow.Setup(context,this.cullingResults,shadowSettings);
         buffer.EndSample(bufferName);
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();
     }
 
-    /// <summary>
-    /// 将可见光的颜色和方向储存到数组
+    /// <summary> 
+    /// 将可见方向光的颜色和方向储存到数组,用来设置多个方向光
     /// </summary>
     /// <param name="index"> 光源索引 </param>
-    /// <param name="visibleLight">可见光 </param>
-    void SetupDirectionalLight(int index, VisibleLight visibleLight)
+    /// <param name="visibleLight"> 可见光 </param>
+    void SetupDirectionalLight(int index, ref VisibleLight visibleLight)
     {
-        // 获取光源的最终颜色
+        // 存储光源的最终颜色
         dirLightColors[index] = visibleLight.finalColor;
-        // 获取光源的方向， visibleLight.localToWorldMatrix 此矩阵的第三列即为光源的前向向量， 要取反
+        // 存储光源的方向， visibleLight.localToWorldMatrix 此矩阵的第三列即为光源的前向向量， 要取反
         dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
+        shadow.ReserveDirectionalShadows(visibleLight.light,index);
     }
 
-    // 设置和发送多个光源的数据
+    /// <summary>
+    /// 将多个平行光的数据传递到GPU
+    /// </summary>
     void SetupLights()
     {
+        int dirLightCount = 0;
         // 得到所有的可见光数据
         NativeArray<VisibleLight> visibleLights = cullingResults.visibleLights;
+        //遍历所有方向光
+        for (int i = 0; i < visibleLights.Length; i++)
+        {
+            var visibleLight = visibleLights[i];
+            // 判断是不是平行光，如果是平行光才进行数据存储
+            if (visibleLight.lightType == LightType.Directional)
+            {
+                // visibleLights 结构体很大，改为传递引用而不是传递值，这样不会生成副本
+                SetupDirectionalLight(dirLightCount++, ref visibleLight);
+
+                // 当超过灯光数量限制的时候就终止循环
+                if (dirLightCount >= maxDirLightCount)
+                {
+                    break;
+                }
+            }
+        }
+        buffer.SetGlobalInt(dirLightCountId, dirLightCount);
+        buffer.SetGlobalVectorArray(dirLightDirctionalId, dirLightDirections);
+        buffer.SetGlobalVectorArray(dirLightColorId, dirLightColors);
     }
 }
