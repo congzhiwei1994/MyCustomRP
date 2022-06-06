@@ -43,29 +43,17 @@ public class Lighting
         this.cullingResults = cullingResults;
         buffer.BeginSample(bufferName);
         SetupLights();
-        // 传递阴影数据
-        shadow.Setup(context,this.cullingResults,shadowSettings);
+        // 初始化并且传递阴影数据
+        shadow.Setup(context, cullingResults, shadowSettings);
+        // 渲染阴影
+        shadow.Render();
         buffer.EndSample(bufferName);
         context.ExecuteCommandBuffer(buffer);
         buffer.Clear();
     }
 
-    /// <summary> 
-    /// 将可见方向光的颜色和方向储存到数组,用来设置多个方向光
-    /// </summary>
-    /// <param name="index"> 光源索引 </param>
-    /// <param name="visibleLight"> 可见光 </param>
-    void SetupDirectionalLight(int index, ref VisibleLight visibleLight)
-    {
-        // 存储光源的最终颜色
-        dirLightColors[index] = visibleLight.finalColor;
-        // 存储光源的方向， visibleLight.localToWorldMatrix 此矩阵的第三列即为光源的前向向量， 要取反
-        dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
-        shadow.ReserveDirectionalShadows(visibleLight.light,index);
-    }
-
     /// <summary>
-    /// 将多个平行光的数据传递到GPU
+    /// 此方法目的是将多个平行光数据传递到GPU
     /// </summary>
     void SetupLights()
     {
@@ -89,8 +77,28 @@ public class Lighting
                 }
             }
         }
+
         buffer.SetGlobalInt(dirLightCountId, dirLightCount);
         buffer.SetGlobalVectorArray(dirLightDirctionalId, dirLightDirections);
         buffer.SetGlobalVectorArray(dirLightColorId, dirLightColors);
+    }
+
+    /// <summary> 
+    /// 此方法将可见的方向光颜色和方向储存到数组
+    /// </summary>
+    /// <param name="index"> 光源索引 </param>
+    /// <param name="visibleLight"> 可见光 </param>
+    void SetupDirectionalLight(int index, ref VisibleLight visibleLight)
+    {
+        // 存储光源的最终颜色
+        dirLightColors[index] = visibleLight.finalColor;
+        // 存储光源的方向， visibleLight.localToWorldMatrix 此矩阵的第三列即为光源的前向向量， 要取反
+        dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
+        shadow.ReserveDirectionalShadows(visibleLight.light, index);
+    }
+
+    public void CleanUp()
+    {
+        shadow.CleanUp();
     }
 }

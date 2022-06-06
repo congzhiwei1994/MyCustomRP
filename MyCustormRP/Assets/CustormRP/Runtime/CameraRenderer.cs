@@ -54,6 +54,7 @@ public partial class CameraRenderer
         DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
         DrawUnsupportedShaders();
         DrawGizmos();
+        light.CleanUp();
         Submit();
     }
 

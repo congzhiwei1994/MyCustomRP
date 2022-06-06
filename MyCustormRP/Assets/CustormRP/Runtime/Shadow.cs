@@ -15,7 +15,6 @@ public class Shadow
     /// </summary>
     private const int maxShadowDirectionalLightCount = 1;
 
-    // 储存相机剔除后的结果
     CullingResults cullingResults;
     private CustormShadowSettings shadowSettings;
     const string bufferName = "Shadows";
@@ -24,6 +23,11 @@ public class Shadow
     {
         name = bufferName
     };
+
+    /// <summary>
+    /// 阴影图集的Shader标识ID
+    /// </summary>
+    private static int dirShadowAtlasId = Shader.PropertyToID("_DirectionalShadowAtlas");
 
     struct ShadowDirectionalLight
     {
@@ -50,6 +54,33 @@ public class Shadow
     }
 
     /// <summary>
+    /// 渲染阴影
+    /// </summary>
+    public void Render()
+    {
+        // 当可投影的平行光数量大于0的时候才会渲染平行光的阴影
+        if (shadowDirectionalLightCount > 0)
+        {
+            RenderDirectionalShadow();
+        }
+    }
+
+    /// <summary>
+    /// 渲染定向光阴影
+    /// </summary>
+    void RenderDirectionalShadow()
+    {
+        int atlasSize = (int)shadowSettings.directional.atlasSize;
+        // 为阴影图集申请RT
+        buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear,
+            RenderTextureFormat.Shadowmap);
+        // 指定渲染数据存储到渲染纹理而不是帧缓冲
+        buffer.SetRenderTarget(dirShadowAtlasId,RenderBufferLoadAction.DontCare,RenderBufferStoreAction.Store);
+        buffer.ClearRenderTarget(true,false,Color.clear);
+        ExecuteBuffer();
+    }
+
+    /// <summary>
     /// 存储可投影可见光的阴影数据，目的是在阴影图集中为该光源的阴影贴图保留空间，并存储渲染它们所需要的信息
     /// </summary>
     public void ReserveDirectionalShadows(Light light, int visibleLightIndex)
@@ -58,13 +89,20 @@ public class Shadow
         // 灯光必须开启阴影并且强度必须大于零
         // 判断是否在阴影最大投射距离内，有被当前光源影响且需要投影的物体存在，否则就没必要渲染阴影贴图了
         if (shadowDirectionalLightCount < maxShadowDirectionalLightCount && light.shadows != LightShadows.None &&
-            light.shadowStrength > 0.0f && this.cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
+            light.shadowStrength >
+            0.0f /*&& this.cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b)*/)
         {
-            // shadowDirctionalights[shadowDirectionalLightCount++] = new ShadowDirectionalLight
-            // {
-            //     visibleLightIndex = visibleLightIndex
-            // };
+            shadowDirctionalights[shadowDirectionalLightCount++] = new ShadowDirectionalLight
+            {
+                visibleLightIndex = visibleLightIndex
+            };
         }
+    }
+
+    public void CleanUp()
+    {
+        buffer.ReleaseTemporaryRT(dirShadowAtlasId);
+        ExecuteBuffer();
     }
 
     private void ExecuteBuffer()

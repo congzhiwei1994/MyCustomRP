@@ -5,7 +5,7 @@ using UnityEngine;
 using UnityEngine.Rendering;
 
 /// <summary>
-/// 阴影设置
+/// 阴影配置
 /// </summary>
 [System.Serializable]
 public class CustormShadowSettings 
