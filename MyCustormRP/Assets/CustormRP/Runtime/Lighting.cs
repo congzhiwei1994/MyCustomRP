@@ -42,9 +42,9 @@ public class Lighting
     {
         this.cullingResults = cullingResults;
         buffer.BeginSample(bufferName);
-        SetupLights();
         // 初始化并且传递阴影数据
         shadow.Setup(context, cullingResults, shadowSettings);
+        SetupLights();
         // 渲染阴影
         shadow.Render();
         buffer.EndSample(bufferName);
@@ -57,9 +57,9 @@ public class Lighting
     /// </summary>
     void SetupLights()
     {
-        int dirLightCount = 0;
         // 得到所有的可见光数据
         NativeArray<VisibleLight> visibleLights = cullingResults.visibleLights;
+        int dirLightCount = 0;
         //遍历所有方向光
         for (int i = 0; i < visibleLights.Length; i++)
         {
@@ -97,6 +97,7 @@ public class Lighting
         shadow.ReserveDirectionalShadows(visibleLight.light, index);
     }
 
+    // 释放申请的RT内存
     public void CleanUp()
     {
         shadow.CleanUp();

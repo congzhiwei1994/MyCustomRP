@@ -75,8 +75,8 @@ public class Shadow
         buffer.GetTemporaryRT(dirShadowAtlasId, atlasSize, atlasSize, 32, FilterMode.Bilinear,
             RenderTextureFormat.Shadowmap);
         // 指定渲染数据存储到渲染纹理而不是帧缓冲
-        buffer.SetRenderTarget(dirShadowAtlasId,RenderBufferLoadAction.DontCare,RenderBufferStoreAction.Store);
-        buffer.ClearRenderTarget(true,false,Color.clear);
+        buffer.SetRenderTarget(dirShadowAtlasId, RenderBufferLoadAction.DontCare, RenderBufferStoreAction.Store);
+        buffer.ClearRenderTarget(true, false, Color.clear);
         ExecuteBuffer();
     }
 
@@ -89,8 +89,7 @@ public class Shadow
         // 灯光必须开启阴影并且强度必须大于零
         // 判断是否在阴影最大投射距离内，有被当前光源影响且需要投影的物体存在，否则就没必要渲染阴影贴图了
         if (shadowDirectionalLightCount < maxShadowDirectionalLightCount && light.shadows != LightShadows.None &&
-            light.shadowStrength >
-            0.0f /*&& this.cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b)*/)
+            light.shadowStrength > 0.0f && this.cullingResults.GetShadowCasterBounds(visibleLightIndex, out Bounds b))
         {
             shadowDirctionalights[shadowDirectionalLightCount++] = new ShadowDirectionalLight
             {
