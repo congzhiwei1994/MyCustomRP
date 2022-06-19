@@ -48,8 +48,12 @@ public partial class CameraRenderer
 
         // 设置缓冲区的名字
         PrepareBuffer();
+        buffer.BeginSample(bufferName);
+        ExecuteBuffer();
         // 绘制几何体之前设置灯光
         light.Setup(context, cullingResults, shadowSettings);
+        buffer.EndSample(bufferName);
+        
         Step();
 
         DrawVisibleGeometry(useDynamicBatching, useGPUInstancing);
