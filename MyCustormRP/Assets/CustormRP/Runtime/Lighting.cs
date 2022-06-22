@@ -16,11 +16,13 @@ public class Lighting
     static int dirLightCountId = Shader.PropertyToID("_DirectionalLightCount");
     static int dirLightColorId = Shader.PropertyToID("_DirectionalLightColors");
     static int dirLightDirctionalId = Shader.PropertyToID("_DirectionalLightDirections");
+    private static int dirLightShadowDataId = Shader.PropertyToID("_DirectionalLightShadowData");
 
     // 储存可见光的颜色和方向
     private static Vector4[] dirLightColors = new Vector4[maxDirLightCount];
     private static Vector4[] dirLightDirections = new Vector4[maxDirLightCount];
-
+    // 存储方向光的阴影数据
+    private static Vector4[] dirLightShadowData = new Vector4[maxDirLightCount];
     const string bufferName = "Lighting";
 
     CommandBuffer buffer = new CommandBuffer
@@ -81,6 +83,7 @@ public class Lighting
         buffer.SetGlobalInt(dirLightCountId, dirLightCount);
         buffer.SetGlobalVectorArray(dirLightDirctionalId, dirLightDirections);
         buffer.SetGlobalVectorArray(dirLightColorId, dirLightColors);
+        buffer.SetGlobalVectorArray(dirLightShadowDataId,dirLightShadowData);
     }
 
     /// <summary> 
@@ -95,6 +98,7 @@ public class Lighting
         // 存储光源的方向， visibleLight.localToWorldMatrix 此矩阵的第三列即为光源的前向向量， 要取反
         dirLightDirections[index] = -visibleLight.localToWorldMatrix.GetColumn(2);
         shadow.ReserveDirectionalShadows(visibleLight.light, index);
+        dirLightShadowData[index] = shadow.ReserveDirectionalShadows(visibleLight.light, index);
     }
 
     // 释放申请的RT内存
